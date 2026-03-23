@@ -26,22 +26,26 @@
 
 
 
+// firebase-admin.ts
 import { cert, initializeApp, getApp, getApps, App } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 
 let app: App;
 
 function getServiceAccount() {
+  // Production / Netlify: use env var
   if (process.env.FIREBASE_SERVICE_ACCOUNT) {
-    try {
-      return JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-    } catch (err) {
-      throw new Error("FIREBASE_SERVICE_ACCOUNT is set but contains invalid JSON");
-    }
+    return JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
   }
-  // Local development fallback (only if you have service_key.json locally)
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  return require("./service_key.json");
+
+  // Local development fallback only
+  if (process.env.NODE_ENV !== "production") {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    return require("./service_key.json");
+  }
+
+  // Fail clearly in production if env var is missing
+  throw new Error("FIREBASE_SERVICE_ACCOUNT is not set in production!");
 }
 
 const serviceAccount = getServiceAccount();
